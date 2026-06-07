@@ -23,10 +23,10 @@ const CATEGORIES = [
 ];
 const PRICE_RANGES = [
   { label: "All Prices", min: undefined, max: undefined },
-  { label: "Under $50", min: 0, max: 50 },
-  { label: "$50 – $100", min: 50, max: 100 },
-  { label: "$100 – $200", min: 100, max: 200 },
-  { label: "Over $200", min: 200, max: undefined },
+  { label: "Under ₹999", min: 0, max: 999 },
+  { label: "₹999 – ₹2,999", min: 999, max: 2999 },
+  { label: "₹2,999 – ₹9,999", min: 2999, max: 9999 },
+  { label: "Over ₹9,999", min: 9999, max: undefined },
 ];
 
 export default function ProductsPage() {
