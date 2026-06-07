@@ -15,17 +15,14 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     List<Product> findByIsNewTrueOrderByCreatedAtDesc();
 
-    @Query("""
-                SELECT p FROM Product p WHERE
-                (:category IS NULL OR LOWER(p.category) = LOWER(:category)) AND
-                (:subCategory IS NULL OR LOWER(p.subCategory) = LOWER(:subCategory)) AND
-                (:search IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%',:search,'%'))
-                    OR LOWER(p.description) LIKE LOWER(CONCAT('%',:search,'%'))) AND
-                (:minPrice IS NULL OR p.price >= :minPrice) AND
-                (:maxPrice IS NULL OR p.price <= :maxPrice) AND
-                (:inStock IS NULL OR p.inStock = :inStock) AND
-                (:rating IS NULL OR p.rating >= :rating)
-            """)
+    @Query("SELECT p FROM Product p WHERE " +
+            "(:category IS NULL OR LOWER(p.category) = LOWER(:category)) AND " +
+            "(:subCategory IS NULL OR LOWER(p.subCategory) = LOWER(:subCategory)) AND " +
+            "(:search IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
+            "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
+            "(:maxPrice IS NULL OR p.price <= :maxPrice) AND " +
+            "(:inStock IS NULL OR p.inStock = :inStock) AND " +
+            "(:rating IS NULL OR p.rating >= :rating)")
     Page<Product> findWithFilters(
             @Param("category") String category,
             @Param("subCategory") String subCategory,
