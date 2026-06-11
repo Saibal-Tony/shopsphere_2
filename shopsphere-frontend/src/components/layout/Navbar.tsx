@@ -51,52 +51,74 @@ export default function Navbar() {
         } border-b border-gray-100`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Left */}
-            <div className="flex items-center gap-6">
+          {/* Replace the entire inner header div */}
+          <div className="flex items-center justify-between h-16 gap-2">
+            {/* Left — hamburger only on mobile */}
+            <div className="flex items-center gap-3 flex-shrink-0">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
                 className="flex flex-col gap-1.5 p-1 lg:hidden"
               >
                 <span
-                  className={`block w-5 h-0.5 bg-gray-900 transition-all ${menuOpen ? "rotate-45 translate-y-2" : ""}`}
+                  className={`block w-5 h-0.5 transition-all duration-300 ${
+                    scrolled ? "bg-white" : "bg-[#031716]"
+                  } ${menuOpen ? "rotate-45 translate-y-2" : ""}`}
                 />
                 <span
-                  className={`block w-5 h-0.5 bg-gray-900 transition-all ${menuOpen ? "opacity-0" : ""}`}
+                  className={`block w-5 h-0.5 transition-all duration-300 ${
+                    scrolled ? "bg-white" : "bg-[#031716]"
+                  } ${menuOpen ? "opacity-0" : ""}`}
                 />
                 <span
-                  className={`block w-5 h-0.5 bg-gray-900 transition-all ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`}
+                  className={`block w-5 h-0.5 transition-all duration-300 ${
+                    scrolled ? "bg-white" : "bg-[#031716]"
+                  } ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`}
                 />
               </button>
 
+              {/* Desktop nav links */}
               <div className="hidden lg:flex items-center gap-7">
                 {navLinks.map((link) => (
                   <Link
                     key={link.to}
                     to={link.to}
-                    className="text-sm font-medium text-gray-700 hover:text-gray-900 tracking-wide transition-colors relative group"
+                    className={`text-sm font-medium tracking-wide transition-colors duration-300 relative group ${
+                      scrolled
+                        ? "text-white/70 hover:text-white"
+                        : "text-[#032F30] hover:text-[#0A7075]"
+                    }`}
                   >
                     {link.label}
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gray-900 transition-all group-hover:w-full" />
+                    <span
+                      className={`absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full ${
+                        scrolled ? "bg-[#0C969C]" : "bg-[#0A7075]"
+                      }`}
+                    />
                   </Link>
                 ))}
               </div>
             </div>
 
-            {/* Center — Logo */}
+            {/* Center — Logo (absolute on desktop, static on mobile) */}
             <Link
               to="/"
-              className="absolute left-1/2 -translate-x-1/2 text-xl font-bold tracking-[0.15em] text-gray-900 uppercase"
+              className={`lg:absolute lg:left-1/2 lg:-translate-x-1/2 font-bold tracking-[0.15em] uppercase transition-colors duration-300 ${
+                scrolled ? "text-white" : "text-[#031716]"
+              } text-base sm:text-lg lg:text-xl whitespace-nowrap`}
             >
               ShopSphere
             </Link>
 
             {/* Right — Icons */}
-            <div className="flex items-center gap-3">
-              {/* Search */}
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+              {/* Search — hidden on mobile, shown on sm+ */}
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                className={`hidden sm:flex p-2 rounded-full transition-colors duration-300 ${
+                  scrolled
+                    ? "text-white hover:bg-white/10"
+                    : "text-[#031716] hover:bg-[#f0fafa]"
+                }`}
               >
                 <svg
                   className="w-5 h-5"
@@ -113,10 +135,14 @@ export default function Navbar() {
                 </svg>
               </button>
 
-              {/* Wishlist */}
+              {/* Wishlist — hidden on mobile */}
               <Link
                 to="/wishlist"
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors hidden sm:block"
+                className={`hidden sm:flex p-2 rounded-full transition-colors duration-300 ${
+                  scrolled
+                    ? "text-white hover:bg-white/10"
+                    : "text-[#031716] hover:bg-[#f0fafa]"
+                }`}
               >
                 <svg
                   className="w-5 h-5"
@@ -133,10 +159,14 @@ export default function Navbar() {
                 </svg>
               </Link>
 
-              {/* Cart ← UPDATED */}
+              {/* Cart */}
               <Link
                 to="/cart"
-                className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
+                className={`relative p-2 rounded-full transition-colors duration-300 ${
+                  scrolled
+                    ? "text-white hover:bg-white/10"
+                    : "text-[#031716] hover:bg-[#f0fafa]"
+                }`}
               >
                 <svg
                   className="w-5 h-5"
@@ -152,7 +182,7 @@ export default function Navbar() {
                   />
                 </svg>
                 {totalItems > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-gray-900 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#0C969C] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                     {totalItems > 9 ? "9+" : totalItems}
                   </span>
                 )}
@@ -161,42 +191,49 @@ export default function Navbar() {
               {/* User */}
               {isAuthenticated ? (
                 <div className="relative group">
-                  <button className="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 transition-colors">
-                    <div className="w-7 h-7 rounded-full bg-gray-900 text-white text-xs font-bold flex items-center justify-center">
+                  <button
+                    className={`flex items-center p-1.5 rounded-full transition-colors ${
+                      scrolled ? "hover:bg-white/10" : "hover:bg-[#f0fafa]"
+                    }`}
+                  >
+                    <div className="w-7 h-7 rounded-full bg-[#0A7075] text-white text-xs font-bold flex items-center justify-center">
                       {user?.username?.[0]?.toUpperCase() || "U"}
                     </div>
                   </button>
+                  {/* Dropdown */}
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                     <div className="p-3 border-b border-gray-100">
-                      <p className="text-sm font-semibold text-gray-900">
+                      <p className="text-sm font-semibold text-[#031716]">
                         {user?.username}
                       </p>
-                      <p className="text-xs text-gray-500">{user?.email}</p>
+                      <p className="text-xs text-gray-400 truncate">
+                        {user?.email}
+                      </p>
                     </div>
                     <div className="p-1">
                       <Link
                         to="/orders"
-                        className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+                        className="block px-3 py-2 text-sm text-gray-700 hover:bg-[#f0fafa] rounded-lg"
                       >
                         My Orders
                       </Link>
                       <Link
-                        to="/profile"
-                        className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+                        to="/wishlist"
+                        className="block px-3 py-2 text-sm text-gray-700 hover:bg-[#f0fafa] rounded-lg"
                       >
-                        Profile
+                        Wishlist
                       </Link>
                       {isAdmin && (
                         <Link
                           to="/admin"
-                          className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+                          className="block px-3 py-2 text-sm text-gray-700 hover:bg-[#f0fafa] rounded-lg"
                         >
                           Admin Panel
                         </Link>
                       )}
                       <button
                         onClick={logout}
-                        className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg"
+                        className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg"
                       >
                         Logout
                       </button>
@@ -206,7 +243,11 @@ export default function Navbar() {
               ) : (
                 <Link
                   to="/login"
-                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  className={`p-2 rounded-full transition-colors duration-300 ${
+                    scrolled
+                      ? "text-white hover:bg-white/10"
+                      : "text-[#031716] hover:bg-[#f0fafa]"
+                  }`}
                 >
                   <svg
                     className="w-5 h-5"
@@ -224,6 +265,30 @@ export default function Navbar() {
                 </Link>
               )}
             </div>
+          </div>
+
+          {/* Mobile search bar — full width below header */}
+          <div
+            className={`sm:hidden overflow-hidden transition-all duration-300 ${
+              searchOpen ? "max-h-16 border-t border-[#0A7075]/20" : "max-h-0"
+            }`}
+          >
+            <form onSubmit={handleSearch} className="px-4 py-2 flex gap-2">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products..."
+                className="flex-1 border border-[#0A7075]/30 rounded-full px-4 py-2 text-sm outline-none focus:border-[#0A7075] bg-white"
+                autoFocus={searchOpen}
+              />
+              <button
+                type="submit"
+                className="bg-[#0A7075] text-white px-4 py-2 rounded-full text-sm font-medium"
+              >
+                Go
+              </button>
+            </form>
           </div>
         </div>
 
@@ -284,6 +349,26 @@ export default function Navbar() {
               </svg>
             </button>
           </div>
+
+          {/* In mobile menu - add search and wishlist */}
+          <div className="p-5 border-b border-white/10">
+            <form onSubmit={handleSearch} className="flex gap-2">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search..."
+                className="flex-1 bg-white/10 border border-white/20 rounded-full px-4 py-2 text-sm text-white placeholder-white/40 outline-none focus:border-[#0C969C]"
+              />
+              <button
+                type="submit"
+                className="bg-[#0C969C] text-white px-4 rounded-full text-sm"
+              >
+                Go
+              </button>
+            </form>
+          </div>
+
           <nav className="p-5 flex flex-col gap-1">
             {navLinks.map((link) => (
               <Link

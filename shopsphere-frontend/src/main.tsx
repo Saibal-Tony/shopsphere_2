@@ -7,6 +7,7 @@ import QueryProvider from "./providers/QueryProvider";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { ToastProvider } from "./context/ToastContext";
+import { WishlistProvider } from "./context/WishlistContext";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -14,9 +15,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <QueryProvider>
         <AuthProvider>
           <CartProvider>
-            <ToastProvider>
-              <App />
-            </ToastProvider>
+            <WishlistProvider>
+              <ToastProvider>
+                <App />
+              </ToastProvider>
+            </WishlistProvider>
           </CartProvider>
         </AuthProvider>
       </QueryProvider>

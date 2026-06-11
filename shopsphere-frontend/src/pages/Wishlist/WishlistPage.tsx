@@ -1,21 +1,9 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import PageTransition from "../../components/common/PageTransition";
-
-interface WishlistItem {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-  category: string;
-}
+import { useWishlist } from "../../context/WishlistContext";
 
 export default function WishlistPage() {
-  const [items, setItems] = useState<WishlistItem[]>([]);
-
-  const removeItem = (id: number) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
-  };
+  const { items, removeItem } = useWishlist();
 
   return (
     <PageTransition>

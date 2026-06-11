@@ -63,6 +63,7 @@ export default function ProductsPage() {
     queryKey: ["products", filters],
     queryFn: () => getProducts(filters),
     placeholderData: (prev) => prev,
+    staleTime: 1000 * 60 * 2,
   });
 
   const updateFilter = useCallback(

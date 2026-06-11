@@ -56,6 +56,11 @@ body {
   100% { transform: translateX(0); opacity: 1; }
 }
 
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
 /* Slide from right */
 @keyframes slideFromRight {
   0% { transform: translateX(60px); opacity: 0; }
@@ -133,4 +138,13 @@ body {
 /* Initial hidden state for animated elements */
 .will-animate {
   opacity: 0;
+}
+
+/* GPU acceleration for animated elements */
+.group, img, [class*="transition"] {
+  will-change: auto;
+}
+
+img {
+  content-visibility: auto;
 }

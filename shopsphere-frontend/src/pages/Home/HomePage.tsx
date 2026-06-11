@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import PageTransition from "../../components/common/PageTransition";
 import AnimateOnScroll from "../../components/common/AnimateOnScroll";
+import { useState, useEffect, useRef } from "react";
 
 // Category data
 const categories = [
@@ -49,20 +50,39 @@ const categories = [
 ];
 
 // Collage items using your actual local images
-const collageItems = [
+const slides = [
   {
-    src: "/assets/women/shirts/shirts_1.jpg",
-    span: "row-span-2",
+    images: [
+      "/assets/women/shirts/shirts_1.jpg",
+      "/assets/men/shirts/shirts_1.jpg",
+      "/assets/women/frock/frock_1.jpg",
+      "/assets/bags/bags_1.jpg",
+      "/assets/women/pants/pants_1.jpg",
+      "/assets/accessories/sunglasses/sunglasses_1.jpg",
+    ],
     label: "New Season",
   },
-  { src: "/assets/men/shirts/shirts_1.jpg", span: "", label: "Men's Edit" },
-  { src: "/assets/women/frock/frock_1.jpg", span: "", label: "Frocks" },
-  { src: "/assets/bags/bags_1.jpg", span: "row-span-2", label: "Bags" },
-  { src: "/assets/women/pants/pants_1.jpg", span: "", label: "Bottoms" },
   {
-    src: "/assets/accessories/sunglasses/sunglasses_1.jpg",
-    span: "",
-    label: "Eyewear",
+    images: [
+      "/assets/men/shirts/shirts_5.jpg",
+      "/assets/footwear/shoes_1.jpg",
+      "/assets/bags/bags_7.jpg",
+      "/assets/watches/watches_1.jpg",
+      "/assets/men/pants/pants_3.jpg",
+      "/assets/accessories/caps/caps_1.jpg",
+    ],
+    label: "Men's Edit",
+  },
+  {
+    images: [
+      "/assets/women/frock/frock_3.jpg",
+      "/assets/women/shirts/shirts_3.jpg",
+      "/assets/bags/bags_11.jpg",
+      "/assets/accessories/necklaces/necklaces_1.jpg",
+      "/assets/women/pants/pants_5.jpg",
+      "/assets/beauty/lipsticks/lipsticks_1.jpg",
+    ],
+    label: "Women's Edit",
   },
 ];
 
@@ -123,15 +143,27 @@ const newArrivals = [
 ];
 
 export default function HomePage() {
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % slides.length);
+    }, 3500);
+
+    return () => clearInterval(timer);
+  }, []);
   return (
     <PageTransition>
       <div className="bg-[#f9f9f7]">
         {/* ── HERO ── */}
-        <section className="relative h-[92vh] min-h-[600px] overflow-hidden bg-gray-900">
+        <section className="relative h-[92vh] min-h-[600px] overflow-hidden bg-[#031716]">
           <img
-            src="/assets/hero.png"
+            src="/assets/hero_banner.jpg"
             alt="Hero"
             className="absolute inset-0 w-full h-full object-cover opacity-75"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "/assets/hero.png";
+            }}
           />
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
@@ -230,50 +262,121 @@ export default function HomePage() {
         </AnimateOnScroll>
 
         {/* ── EDITORIAL COLLAGE ── */}
-        <AnimateOnScroll animation="scale" delay={100}>
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+          <AnimateOnScroll animation="bottom">
             <div className="flex items-end justify-between mb-10">
               <div>
-                <p className="text-xs tracking-[0.3em] text-gray-400 uppercase mb-2">
+                <p className="text-xs tracking-[0.3em] text-[#0A7075] uppercase mb-2">
                   Editorial
                 </p>
-                <h2 className="font-serif text-3xl md:text-4xl text-gray-900">
+                <h2 className="font-serif text-3xl md:text-4xl text-[#031716]">
                   New Collection
                 </h2>
               </div>
               <Link
                 to="/products"
-                className="text-sm text-gray-500 hover:text-gray-900 transition-colors underline underline-offset-4"
+                className="text-sm text-[#0A7075] hover:text-[#031716] transition-colors underline underline-offset-4"
               >
                 Shop collection
               </Link>
             </div>
+          </AnimateOnScroll>
 
-            <div className="grid grid-cols-3 grid-rows-2 gap-3 h-[600px]">
-              {collageItems.map((item, i) => (
-                <Link
-                  key={i}
-                  to="/products"
-                  className={`relative overflow-hidden rounded-xl group bg-gray-200 ${item.span}`}
+          {/* Slide indicators */}
+          <div className="flex gap-2 mb-6">
+            {slides.map((slide, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveSlide(i)}
+                className="flex items-center gap-2 group"
+              >
+                <div
+                  className={`h-0.5 transition-all duration-500 rounded-full ${
+                    activeSlide === i
+                      ? "w-8 bg-[#0A7075]"
+                      : "w-4 bg-gray-300 group-hover:bg-[#0C969C]"
+                  }`}
+                />
+                <span
+                  className={`text-xs font-medium transition-colors ${
+                    activeSlide === i ? "text-[#0A7075]" : "text-gray-400"
+                  }`}
                 >
-                  <img
-                    src={item.src}
-                    alt={item.label}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src =
-                        `https://placehold.co/400x500/e5e7eb/9ca3af?text=${item.label}`;
+                  {slide.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Grid */}
+          <div
+            className="hidden md:block relative overflow-hidden rounded-2xl"
+            style={{ height: "600px" }}
+          >
+            {slides.map((slide, slideIdx) => (
+              <div
+                key={slideIdx}
+                className="absolute inset-0 grid grid-cols-3 grid-rows-2 gap-3"
+                style={{
+                  opacity: activeSlide === slideIdx ? 1 : 0,
+                  transform:
+                    activeSlide === slideIdx
+                      ? "scale(1) translateX(0)"
+                      : slideIdx < activeSlide
+                        ? "scale(0.97) translateX(-20px)"
+                        : "scale(0.97) translateX(20px)",
+                  transition: "all 0.75s cubic-bezier(0.16, 1, 0.3, 1)",
+                  pointerEvents: activeSlide === slideIdx ? "auto" : "none",
+                }}
+              >
+                {slide.images.map((src, i) => (
+                  <Link
+                    key={i}
+                    to="/products"
+                    className={`relative overflow-hidden rounded-xl group bg-gray-200 ${
+                      i === 0 ? "row-span-2" : i === 3 ? "row-span-2" : ""
+                    }`}
+                    style={{
+                      transition: `transform 0.75s cubic-bezier(0.16, 1, 0.3, 1) ${i * 60}ms`,
+                      transform:
+                        activeSlide === slideIdx
+                          ? "translateY(0)"
+                          : "translateY(30px)",
                     }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="absolute bottom-4 left-4 text-white font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    {item.label} →
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        </AnimateOnScroll>
+                  >
+                    <img
+                      src={src}
+                      alt=""
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          "https://placehold.co/400x500/031716/0C969C?text=SS";
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#031716]/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  </Link>
+                ))}
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile — horizontal scroll slider */}
+          <div className="md:hidden mt-4 flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
+            {slides[activeSlide].images.map((src, i) => (
+              <div
+                key={i}
+                className="flex-shrink-0 w-48 h-64 rounded-xl overflow-hidden snap-start"
+                style={{
+                  opacity: 0,
+                  transform: "translateX(30px)",
+                  animation: `slideInRight 0.5s cubic-bezier(0.16,1,0.3,1) ${i * 80}ms forwards`,
+                }}
+              >
+                <img src={src} alt="" className="w-full h-full object-cover" />
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* ── FEATURED PRODUCTS ── */}
         <section className="bg-white py-20">
