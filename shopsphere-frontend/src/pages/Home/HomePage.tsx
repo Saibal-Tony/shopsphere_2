@@ -3,12 +3,12 @@ import AnimateOnScroll from "../../components/common/AnimateOnScroll";
 import { useState, useEffect, useRef } from "react";
 
 // ── Direction map ──
-const directionMap = {
-  fromLeft: { enter: "translateX(-100%)", exit: "translateX(100%)" },
-  fromRight: { enter: "translateX(100%)", exit: "translateX(-100%)" },
-  fromTop: { enter: "translateY(-100%)", exit: "translateY(100%)" },
-  fromBottom: { enter: "translateY(100%)", exit: "translateY(-100%)" },
-};
+// const directionMap = {
+//   fromLeft: { enter: "translateX(-100%)", exit: "translateX(100%)" },
+//   fromRight: { enter: "translateX(100%)", exit: "translateX(-100%)" },
+//   fromTop: { enter: "translateY(-100%)", exit: "translateY(100%)" },
+//   fromBottom: { enter: "translateY(100%)", exit: "translateY(-100%)" },
+// };
 
 // ── CollageCell — OUTSIDE HomePage ──
 function CollageCell({
@@ -25,12 +25,12 @@ function CollageCell({
   const [layers, setLayers] = useState([{ src: images[0], z: 1 }]);
   const prevIdx = useRef(0);
 
-  const enterFrom: Record<string, string> = {
-    fromLeft: "translateX(-100%)",
-    fromRight: "translateX(100%)",
-    fromTop: "translateY(-100%)",
-    fromBottom: "translateY(100%)",
-  };
+  // const enterFrom: Record<string, string> = {
+  //   fromLeft: "translateX(-100%)",
+  //   fromRight: "translateX(100%)",
+  //   fromTop: "translateY(-100%)",
+  //   fromBottom: "translateY(100%)",
+  // };
 
   useEffect(() => {
     if (currentIdx === prevIdx.current) return;

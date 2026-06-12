@@ -64,7 +64,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173",
-                "https://your-app.vercel.app" // add your Vercel URL
+                "https://shopsphere-2-c421vtl9p-saibal-tonys-projects.vercel.app/" // add your Vercel URL
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
