@@ -4,6 +4,7 @@ import Footer from "./Footer";
 
 export default function MainLayout() {
   const location = useLocation();
+  const isHome = location.pathname === "/";
   const hideFooter = ["/login", "/register", "/checkout"].includes(
     location.pathname,
   );
@@ -14,6 +15,8 @@ export default function MainLayout() {
       style={{ background: "#eef8f8" }}
     >
       <Navbar />
+      {/* No spacer on home — hero fills viewport. Spacer on all other pages */}
+      {!isHome && <div className="h-16" />}
       <main className="flex-1">
         <Outlet />
       </main>

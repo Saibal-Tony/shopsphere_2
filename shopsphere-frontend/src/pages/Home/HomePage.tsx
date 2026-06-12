@@ -22,112 +22,354 @@ function CollageCell({
   direction: string;
   rowSpan: boolean;
 }) {
-  const [displayIdx, setDisplayIdx] = useState(currentIdx);
-  const [phase, setPhase] = useState<"idle" | "exit" | "enter">("idle");
-  const prevIdx = useRef(currentIdx);
-  const dir = directionMap[direction as keyof typeof directionMap];
+  const [layers, setLayers] = useState([{ src: images[0], z: 1 }]);
+  const prevIdx = useRef(0);
+
+  const enterFrom: Record<string, string> = {
+    fromLeft: "translateX(-100%)",
+    fromRight: "translateX(100%)",
+    fromTop: "translateY(-100%)",
+    fromBottom: "translateY(100%)",
+  };
 
   useEffect(() => {
     if (currentIdx === prevIdx.current) return;
-    setPhase("exit");
-    const t1 = setTimeout(() => {
-      setDisplayIdx(currentIdx);
-      setPhase("enter");
-      prevIdx.current = currentIdx;
-    }, 700); // ← was 500
+    const newSrc = images[currentIdx];
+    prevIdx.current = currentIdx;
 
-    const t2 = setTimeout(() => setPhase("idle"), 1400);
+    // Add new layer on top, starting offscreen
+    setLayers((prev) => [...prev, { src: newSrc, z: prev.length + 1 }]);
 
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
+    // After it slides in, remove old layers
+    const t = setTimeout(() => {
+      setLayers([{ src: newSrc, z: 1 }]);
+    }, 1000);
+
+    return () => clearTimeout(t);
   }, [currentIdx]);
-
-  const getTransform = () => {
-    if (phase === "exit") return dir.exit;
-    if (phase === "enter") return dir.enter;
-    return "translate(0,0)";
-  };
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl bg-[#031716] group"
+      className="relative overflow-hidden rounded-2xl bg-[#031716]"
       style={{ gridRow: rowSpan ? "span 2" : "span 1" }}
     >
-      <img
-        src={images[displayIdx]}
-        alt=""
-        className="w-full h-full object-cover"
-        style={{
-          transform: getTransform(),
-          transition:
-            phase === "idle"
-              ? "none"
-              : "transform 0.8s cubic-bezier(0.76, 0, 0.24, 1)",
-        }}
-        onError={(e) => {
-          (e.target as HTMLImageElement).src =
-            "https://placehold.co/400x600/031716/0C969C?text=SS";
-        }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#031716]/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        {images.map((_, i) => (
-          <div
-            key={i}
-            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-              i === displayIdx ? "bg-white scale-125" : "bg-white/40"
-            }`}
+      {layers.map((layer, i) => (
+        <div
+          key={layer.src + layer.z}
+          className="absolute inset-0"
+          style={{ zIndex: layer.z }}
+        >
+          <img
+            src={layer.src}
+            alt=""
+            className="w-full h-full object-cover"
+            style={{
+              animation:
+                i === layers.length - 1 && layers.length > 1
+                  ? `slideIn_${direction} 0.9s cubic-bezier(0.76, 0, 0.24, 1) forwards`
+                  : "none",
+            }}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src =
+                "https://placehold.co/400x600/031716/0C969C?text=SS";
+            }}
           />
-        ))}
-      </div>
+        </div>
+      ))}
+
+      {/* Subtle overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#031716]/30 via-transparent to-transparent z-20 pointer-events-none" />
     </div>
   );
 }
 
-// ── Static data — OUTSIDE HomePage ──
+// Animated SVG icon component
+function CategoryIcon({ type }: { type: string }) {
+  const icons: Record<string, React.ReactNode> = {
+    men: (
+      <svg viewBox="0 0 48 48" className="w-10 h-10" fill="none">
+        <circle
+          cx="24"
+          cy="14"
+          r="7"
+          stroke="#0A7075"
+          strokeWidth="2.5"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <path
+          d="M8 42c0-8.837 7.163-16 16-16s16 7.163 16 16"
+          stroke="#0A7075"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <path
+          d="M20 30l4 5 4-5"
+          stroke="#0C969C"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+      </svg>
+    ),
+    women: (
+      <svg viewBox="0 0 48 48" className="w-10 h-10" fill="none">
+        <circle
+          cx="24"
+          cy="13"
+          r="7"
+          stroke="#0A7075"
+          strokeWidth="2.5"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <path
+          d="M15 24l-4 18h26l-4-18"
+          stroke="#0A7075"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <path
+          d="M17 24c0 0 2 4 7 4s7-4 7-4"
+          stroke="#0C969C"
+          strokeWidth="2"
+          strokeLinecap="round"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+      </svg>
+    ),
+    footwear: (
+      <svg viewBox="0 0 48 48" className="w-10 h-10" fill="none">
+        <path
+          d="M6 32c0 0 4-10 12-10c4 0 6 3 10 3c4 0 6-1 8-1c2 0 6 2 6 6c0 3-2 5-6 5H8c-1.1 0-2-.9-2-2v-1z"
+          stroke="#0A7075"
+          strokeWidth="2.5"
+          strokeLinejoin="round"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <path
+          d="M18 22l2-8 6 2"
+          stroke="#0C969C"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <circle
+          cx="14"
+          cy="33"
+          r="2"
+          fill="#0C969C"
+          className="transition-all duration-300 group-hover:fill-white"
+        />
+        <circle
+          cx="22"
+          cy="33"
+          r="2"
+          fill="#0C969C"
+          className="transition-all duration-300 group-hover:fill-white"
+        />
+      </svg>
+    ),
+    bags: (
+      <svg viewBox="0 0 48 48" className="w-10 h-10" fill="none">
+        <rect
+          x="8"
+          y="18"
+          width="32"
+          height="24"
+          rx="4"
+          stroke="#0A7075"
+          strokeWidth="2.5"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <path
+          d="M17 18v-4a7 7 0 0114 0v4"
+          stroke="#0A7075"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <path
+          d="M8 28h32"
+          stroke="#0C969C"
+          strokeWidth="2"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <path
+          d="M21 33h6"
+          stroke="#0C969C"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+      </svg>
+    ),
+    beauty: (
+      <svg viewBox="0 0 48 48" className="w-10 h-10" fill="none">
+        <path
+          d="M24 6c0 0-8 6-8 14a8 8 0 0016 0c0-8-8-14-8-14z"
+          stroke="#0A7075"
+          strokeWidth="2.5"
+          strokeLinejoin="round"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <path
+          d="M20 26c1 2 2.5 3 4 3"
+          stroke="#0C969C"
+          strokeWidth="2"
+          strokeLinecap="round"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <path
+          d="M24 34v8"
+          stroke="#0A7075"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <path
+          d="M18 42h12"
+          stroke="#0A7075"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <circle
+          cx="36"
+          cy="12"
+          r="3"
+          stroke="#0C969C"
+          strokeWidth="2"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <circle
+          cx="12"
+          cy="10"
+          r="2"
+          stroke="#0C969C"
+          strokeWidth="2"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+      </svg>
+    ),
+    electronics: (
+      <svg viewBox="0 0 48 48" className="w-10 h-10" fill="none">
+        <rect
+          x="8"
+          y="12"
+          width="32"
+          height="20"
+          rx="3"
+          stroke="#0A7075"
+          strokeWidth="2.5"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <path
+          d="M16 32v4M32 32v4M12 36h24"
+          stroke="#0A7075"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <circle
+          cx="24"
+          cy="22"
+          r="4"
+          stroke="#0C969C"
+          strokeWidth="2"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <path
+          d="M24 18v-3M24 26v3M20 22h-3M28 22h3"
+          stroke="#0C969C"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+      </svg>
+    ),
+    accessories: (
+      <svg viewBox="0 0 48 48" className="w-10 h-10" fill="none">
+        <circle
+          cx="24"
+          cy="24"
+          r="10"
+          stroke="#0A7075"
+          strokeWidth="2.5"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <circle
+          cx="24"
+          cy="24"
+          r="4"
+          stroke="#0C969C"
+          strokeWidth="2"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <path
+          d="M24 8v4M24 36v4M8 24h4M36 24h4"
+          stroke="#0A7075"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+        <path
+          d="M13.1 13.1l2.8 2.8M32.1 32.1l2.8 2.8M13.1 34.9l2.8-2.8M32.1 15.9l2.8-2.8"
+          stroke="#0C969C"
+          strokeWidth="2"
+          strokeLinecap="round"
+          className="transition-all duration-300 group-hover:stroke-white"
+        />
+      </svg>
+    ),
+  };
+  return icons[type] || null;
+}
+
 const categories = [
   {
     label: "Men",
     to: "/products?category=men",
-    emoji: "👔",
+    type: "men",
     bg: "bg-[#f0fafa]",
   },
   {
     label: "Women",
     to: "/products?category=women",
-    emoji: "👗",
-    bg: "bg-[#ccefef]/40",
+    type: "women",
+    bg: "bg-[#e8f7f7]",
   },
   {
     label: "Footwear",
     to: "/products?category=footwear",
-    emoji: "👟",
-    bg: "bg-[#6BA3BE]/10",
+    type: "footwear",
+    bg: "bg-[#f0fafa]",
   },
   {
     label: "Bags",
     to: "/products?category=bags",
-    emoji: "👜",
-    bg: "bg-[#0C969C]/10",
+    type: "bags",
+    bg: "bg-[#e8f7f7]",
   },
   {
     label: "Beauty",
     to: "/products?category=beauty",
-    emoji: "✨",
-    bg: "bg-[#032F30]/5",
+    type: "beauty",
+    bg: "bg-[#f0fafa]",
   },
   {
     label: "Electronics",
     to: "/products?category=electronics",
-    emoji: "🎧",
-    bg: "bg-[#6BA3BE]/20",
+    type: "electronics",
+    bg: "bg-[#e8f7f7]",
   },
   {
     label: "Accessories",
     to: "/products?category=accessories",
-    emoji: "💍",
+    type: "accessories",
     bg: "bg-[#f0fafa]",
   },
 ];
@@ -139,40 +381,45 @@ const categories = [
 // Cell 5 goes in a separate bottom strip
 
 const cellImages = [
-  // Cell 0 — tall left (row-span-2)
   [
     "/assets/women/shirts/shirts_1.jpg",
     "/assets/men/shirts/shirts_5.jpg",
     "/assets/women/frock/frock_3.jpg",
     "/assets/women/specials/specials_1.jpg",
+    "/assets/women/shirts/shirts_7.jpg",
+    "/assets/women/specials/specials_3.jpg",
   ],
-  // Cell 1 — top middle
   [
     "/assets/men/shirts/shirts_1.jpg",
     "/assets/footwear/shoes_1.jpg",
     "/assets/men/pants/pants_1.jpg",
     "/assets/men/shirts/shirts_9.jpg",
+    "/assets/footwear/shoes_7.jpg",
+    "/assets/men/shirts/shirts_13.jpg",
   ],
-  // Cell 2 — top right
   [
     "/assets/women/frock/frock_1.jpg",
     "/assets/bags/bags_7.jpg",
     "/assets/women/shirts/shirts_3.jpg",
     "/assets/beauty/lipsticks/lipsticks_1.jpg",
+    "/assets/women/frock/frock_5.jpg",
+    "/assets/bags/bags_11.jpg",
   ],
-  // Cell 3 — bottom middle
   [
     "/assets/bags/bags_1.jpg",
     "/assets/bags/bags_3.jpg",
-    "/assets/bags/bags_11.jpg",
+    "/assets/watches/watches_1.jpg",
     "/assets/accessories/necklaces/necklaces_1.jpg",
+    "/assets/bags/bags_15.jpg",
+    "/assets/watches/watches_5.jpg",
   ],
-  // Cell 4 — bottom right
   [
     "/assets/women/pants/pants_1.jpg",
     "/assets/men/pants/pants_3.jpg",
     "/assets/footwear/shoes_3.jpg",
     "/assets/accessories/sunglasses/sunglasses_1.jpg",
+    "/assets/footwear/shoes_9.jpg",
+    "/assets/men/pants/pants_7.jpg",
   ],
 ];
 
@@ -241,6 +488,16 @@ const newArrivals = [
 
 // ── HomePage — all useState/useEffect INSIDE here ──
 export default function HomePage() {
+  const [mobileSlide, setMobileSlide] = useState(0);
+  const mobileImages = cellImages.map((arr) => arr[0]);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setMobileSlide((prev) => (prev + 1) % mobileImages.length);
+    }, 4000);
+    return () => clearInterval(t);
+  }, []);
+
   useEffect(() => {
     const intervals = cellImages.map(
       (_, i) =>
@@ -252,8 +509,8 @@ export default function HomePage() {
               return next;
             });
           },
-          6000 + i * 1200,
-        ), // ← much slower: 6s, 7.2s, 8.4s, 9.6s, 10.8s
+          10000 + i * 2000,
+        ), // 10s, 12s, 14s, 16s, 18s
     );
     return () => intervals.forEach(clearInterval);
   }, []);
@@ -360,7 +617,7 @@ export default function HomePage() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="flex items-end justify-between mb-10">
             <div>
-              <p className="text-xs tracking-[0.3em] text-[#0A7075] uppercase mb-2">
+              <p className="text-xs tracking-[0.35em] text-[#0C969C] uppercase mb-2 font-medium">
                 Browse By
               </p>
               <h2 className="font-serif text-3xl md:text-4xl text-[#031716]">
@@ -374,15 +631,17 @@ export default function HomePage() {
               View all
             </Link>
           </div>
-          <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
+          <div className="lg:hidden flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
             {categories.map((cat) => (
               <Link
                 key={cat.label}
                 to={cat.to}
-                className={`${cat.bg} rounded-2xl p-4 sm:p-6 flex flex-col items-center gap-2 sm:gap-3 hover:scale-105 hover:bg-[#031716] hover:text-white transition-all duration-300 group`}
+                className={`${cat.bg} rounded-2xl p-4 flex flex-col items-center gap-2 group hover:bg-[#031716] transition-all duration-300 flex-shrink-0 w-24 snap-start`}
               >
-                <span className="text-2xl sm:text-3xl">{cat.emoji}</span>
-                <span className="text-xs sm:text-sm font-semibold text-[#031716] group-hover:text-white tracking-wide transition-colors">
+                <div className="transition-transform duration-300 group-hover:scale-110">
+                  <CategoryIcon type={cat.type} />
+                </div>
+                <span className="text-xs font-semibold text-[#031716] group-hover:text-white tracking-wide transition-colors duration-300 text-center whitespace-nowrap">
                   {cat.label}
                 </span>
               </Link>
@@ -396,7 +655,7 @@ export default function HomePage() {
         <AnimateOnScroll animation="bottom">
           <div className="flex items-end justify-between mb-8">
             <div>
-              <p className="text-xs tracking-[0.3em] text-[#0A7075] uppercase mb-2">
+              <p className="text-xs tracking-[0.35em] text-[#0C969C] uppercase mb-2 font-medium">
                 Editorial
               </p>
               <h2 className="font-serif text-3xl md:text-4xl text-[#031716]">
@@ -431,24 +690,51 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Mobile — horizontal scroll */}
-        <div className="md:hidden flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory">
-          {cellImages.map((images, cellI) => (
-            <div
-              key={cellI}
-              className="flex-shrink-0 w-48 h-64 rounded-2xl overflow-hidden snap-start bg-[#031716]"
-            >
-              <img
-                src={images[cellIdx[cellI]]}
-                alt=""
-                className="w-full h-full object-cover transition-all duration-500"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src =
-                    "https://placehold.co/200x260/031716/0C969C?text=SS";
+        {/* Mobile collage */}
+        <div className="lg:hidden">
+          <div
+            className="relative overflow-hidden rounded-2xl"
+            style={{ height: "480px" }}
+          >
+            {mobileImages.map((src, i) => (
+              <div
+                key={i}
+                className="absolute inset-0"
+                style={{
+                  opacity: mobileSlide === i ? 1 : 0,
+                  transform: mobileSlide === i ? "scale(1)" : "scale(1.04)",
+                  transition: "opacity 1s ease, transform 1s ease",
+                  zIndex: mobileSlide === i ? 2 : 1,
                 }}
-              />
+              >
+                <img
+                  src={src}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src =
+                      "https://placehold.co/400x480/031716/0C969C?text=SS";
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#031716]/50 via-transparent to-transparent" />
+              </div>
+            ))}
+
+            {/* Dots */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+              {mobileImages.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setMobileSlide(i)}
+                  className={`rounded-full transition-all duration-300 ${
+                    mobileSlide === i
+                      ? "w-6 h-1.5 bg-white"
+                      : "w-1.5 h-1.5 bg-white/40"
+                  }`}
+                />
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </section>
 
@@ -458,7 +744,7 @@ export default function HomePage() {
           <AnimateOnScroll animation="bottom">
             <div className="flex items-end justify-between mb-12">
               <div>
-                <p className="text-xs tracking-[0.3em] text-[#0A7075] uppercase mb-2">
+                <p className="text-xs tracking-[0.35em] text-[#0C969C] uppercase mb-2 font-medium">
                   Handpicked
                 </p>
                 <h2 className="font-serif text-3xl md:text-4xl text-[#031716]">
@@ -514,34 +800,46 @@ export default function HomePage() {
       <AnimateOnScroll animation="scale">
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div
-            className="relative overflow-hidden rounded-3xl px-8 sm:px-16 py-20 text-center"
+            className="relative overflow-hidden rounded-3xl px-8 sm:px-16 py-24 text-center"
             style={{
               background:
-                "linear-gradient(135deg, #031716 0%, #032F30 50%, #0A7075 100%)",
+                "linear-gradient(135deg, #031716 0%, #0A7075 50%, #0C969C 100%)",
             }}
           >
-            <div
-              className="absolute inset-0 opacity-20"
-              style={{
-                backgroundImage:
-                  "radial-gradient(circle at 20% 50%, #0C969C, transparent 50%), radial-gradient(circle at 80% 50%, #6BA3BE, transparent 50%)",
-              }}
-            />
+            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/5" />
+            <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-[#0C969C]/20" />
+
             <div className="relative">
-              <p className="text-[#0C969C] text-xs tracking-[0.4em] uppercase mb-4">
+              <p className="text-[#0C969C]/80 text-xs tracking-[0.5em] uppercase mb-4 font-medium">
                 Limited Time
               </p>
-              <h2 className="font-serif text-4xl md:text-6xl text-white font-bold mb-4">
+
+              <h2 className="font-serif text-5xl md:text-7xl text-white font-bold mb-4">
                 Summer Sale
               </h2>
-              <p className="text-white/70 text-lg mb-8">
+
+              <p className="text-white/60 text-lg mb-10">
                 Up to 40% off on selected items
               </p>
+
               <Link
                 to="/products"
-                className="inline-block bg-white text-[#031716] px-10 py-4 text-sm font-bold tracking-wide hover:bg-[#0C969C] hover:text-white transition-all duration-300 rounded-full"
+                className="inline-flex items-center gap-2 bg-white text-[#031716] px-10 py-4 text-sm font-bold tracking-wide hover:bg-[#0C969C] hover:text-white transition-all duration-300 rounded-full"
               >
                 Shop the Sale
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
               </Link>
             </div>
           </div>
@@ -554,7 +852,7 @@ export default function HomePage() {
           <AnimateOnScroll animation="bottom">
             <div className="flex items-end justify-between mb-10">
               <div>
-                <p className="text-xs tracking-[0.3em] text-[#0A7075] uppercase mb-2">
+                <p className="text-xs tracking-[0.35em] text-[#0C969C] uppercase mb-2 font-medium">
                   Just In
                 </p>
                 <h2 className="font-serif text-3xl md:text-4xl text-[#031716]">

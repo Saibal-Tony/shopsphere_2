@@ -159,3 +159,23 @@ body {
 img {
   content-visibility: auto;
 }
+
+@keyframes slideIn_fromLeft {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes slideIn_fromRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes slideIn_fromTop {
+  from { transform: translateY(-100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes slideIn_fromBottom {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
