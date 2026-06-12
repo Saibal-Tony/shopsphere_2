@@ -43,6 +43,9 @@ export default {
           "100%": { opacity: "1", transform: "translateX(0)" },
         },
       },
+      backgroundColor: {
+          DEFAULT: '#eef8f8',
+      },
     },
   },
   plugins: [],

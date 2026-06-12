@@ -5,6 +5,7 @@ import { getProductById } from "../../api/productApi";
 import { useCart } from "../../context/CartContext";
 import { useToast } from "../../context/ToastContext";
 import PageTransition from "../../components/common/PageTransition";
+import { useWishlist } from "../../context/WishlistContext";
 
 export default function ProductDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +16,7 @@ export default function ProductDetailsPage() {
   const [added, setAdded] = useState(false);
   const { addItem } = useCart();
   const { showToast } = useToast();
+  const { isWishlisted, toggle } = useWishlist();
 
   const {
     data: product,
@@ -305,10 +307,25 @@ export default function ProductDetailsPage() {
                 </button>
 
                 {/* Wishlist */}
-                <button className="w-12 h-12 border border-gray-200 rounded-xl flex items-center justify-center hover:border-red-300 hover:text-red-500 transition-colors bg-white">
+                <button
+                  onClick={() =>
+                    toggle({
+                      id: product.id,
+                      name: product.name,
+                      price: Number(product.discountedPrice || product.price),
+                      image: product.imageUrls?.[0] || "",
+                      category: product.category,
+                    })
+                  }
+                  className={`w-12 h-12 border rounded-xl flex items-center justify-center transition-colors ${
+                    isWishlisted(product.id)
+                      ? "border-[#0C969C] bg-[#0C969C]/10 text-[#0C969C]"
+                      : "border-gray-200 hover:border-[#0C969C] hover:text-[#0C969C]"
+                  }`}
+                >
                   <svg
                     className="w-5 h-5"
-                    fill="none"
+                    fill={isWishlisted(product.id) ? "currentColor" : "none"}
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >

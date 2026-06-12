@@ -4,10 +4,15 @@ import Footer from "./Footer";
 
 export default function MainLayout() {
   const location = useLocation();
-  const hideFooter = ["/login", "/register", "/checkout"].includes(location.pathname);
+  const hideFooter = ["/login", "/register", "/checkout"].includes(
+    location.pathname,
+  );
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f0fafa]">
+    <div
+      className="flex flex-col min-h-screen"
+      style={{ background: "#eef8f8" }}
+    >
       <Navbar />
       <main className="flex-1">
         <Outlet />

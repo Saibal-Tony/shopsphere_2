@@ -1,9 +1,92 @@
 import { Link } from "react-router-dom";
-import PageTransition from "../../components/common/PageTransition";
 import AnimateOnScroll from "../../components/common/AnimateOnScroll";
 import { useState, useEffect, useRef } from "react";
 
-// Category data
+// ── Direction map ──
+const directionMap = {
+  fromLeft: { enter: "translateX(-100%)", exit: "translateX(100%)" },
+  fromRight: { enter: "translateX(100%)", exit: "translateX(-100%)" },
+  fromTop: { enter: "translateY(-100%)", exit: "translateY(100%)" },
+  fromBottom: { enter: "translateY(100%)", exit: "translateY(-100%)" },
+};
+
+// ── CollageCell — OUTSIDE HomePage ──
+function CollageCell({
+  images,
+  currentIdx,
+  direction,
+  rowSpan,
+}: {
+  images: string[];
+  currentIdx: number;
+  direction: string;
+  rowSpan: boolean;
+}) {
+  const [displayIdx, setDisplayIdx] = useState(currentIdx);
+  const [phase, setPhase] = useState<"idle" | "exit" | "enter">("idle");
+  const prevIdx = useRef(currentIdx);
+  const dir = directionMap[direction as keyof typeof directionMap];
+
+  useEffect(() => {
+    if (currentIdx === prevIdx.current) return;
+    setPhase("exit");
+    const t1 = setTimeout(() => {
+      setDisplayIdx(currentIdx);
+      setPhase("enter");
+      prevIdx.current = currentIdx;
+    }, 700); // ← was 500
+
+    const t2 = setTimeout(() => setPhase("idle"), 1400);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [currentIdx]);
+
+  const getTransform = () => {
+    if (phase === "exit") return dir.exit;
+    if (phase === "enter") return dir.enter;
+    return "translate(0,0)";
+  };
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-2xl bg-[#031716] group"
+      style={{ gridRow: rowSpan ? "span 2" : "span 1" }}
+    >
+      <img
+        src={images[displayIdx]}
+        alt=""
+        className="w-full h-full object-cover"
+        style={{
+          transform: getTransform(),
+          transition:
+            phase === "idle"
+              ? "none"
+              : "transform 0.8s cubic-bezier(0.76, 0, 0.24, 1)",
+        }}
+        onError={(e) => {
+          (e.target as HTMLImageElement).src =
+            "https://placehold.co/400x600/031716/0C969C?text=SS";
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#031716]/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        {images.map((_, i) => (
+          <div
+            key={i}
+            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+              i === displayIdx ? "bg-white scale-125" : "bg-white/40"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Static data — OUTSIDE HomePage ──
 const categories = [
   {
     label: "Men",
@@ -49,41 +132,56 @@ const categories = [
   },
 ];
 
-// Collage items using your actual local images
-const slides = [
-  {
-    images: [
-      "/assets/women/shirts/shirts_1.jpg",
-      "/assets/men/shirts/shirts_1.jpg",
-      "/assets/women/frock/frock_1.jpg",
-      "/assets/bags/bags_1.jpg",
-      "/assets/women/pants/pants_1.jpg",
-      "/assets/accessories/sunglasses/sunglasses_1.jpg",
-    ],
-    label: "New Season",
-  },
-  {
-    images: [
-      "/assets/men/shirts/shirts_5.jpg",
-      "/assets/footwear/shoes_1.jpg",
-      "/assets/bags/bags_7.jpg",
-      "/assets/watches/watches_1.jpg",
-      "/assets/men/pants/pants_3.jpg",
-      "/assets/accessories/caps/caps_1.jpg",
-    ],
-    label: "Men's Edit",
-  },
-  {
-    images: [
-      "/assets/women/frock/frock_3.jpg",
-      "/assets/women/shirts/shirts_3.jpg",
-      "/assets/bags/bags_11.jpg",
-      "/assets/accessories/necklaces/necklaces_1.jpg",
-      "/assets/women/pants/pants_5.jpg",
-      "/assets/beauty/lipsticks/lipsticks_1.jpg",
-    ],
-    label: "Women's Edit",
-  },
+// New grid — 3 cols, 2 rows, only cell 0 spans 2 rows
+// Layout:
+// [  0  ] [ 1 ] [ 2 ]
+// [  0  ] [ 3 ] [ 4 ]
+// Cell 5 goes in a separate bottom strip
+
+const cellImages = [
+  // Cell 0 — tall left (row-span-2)
+  [
+    "/assets/women/shirts/shirts_1.jpg",
+    "/assets/men/shirts/shirts_5.jpg",
+    "/assets/women/frock/frock_3.jpg",
+    "/assets/women/specials/specials_1.jpg",
+  ],
+  // Cell 1 — top middle
+  [
+    "/assets/men/shirts/shirts_1.jpg",
+    "/assets/footwear/shoes_1.jpg",
+    "/assets/men/pants/pants_1.jpg",
+    "/assets/men/shirts/shirts_9.jpg",
+  ],
+  // Cell 2 — top right
+  [
+    "/assets/women/frock/frock_1.jpg",
+    "/assets/bags/bags_7.jpg",
+    "/assets/women/shirts/shirts_3.jpg",
+    "/assets/beauty/lipsticks/lipsticks_1.jpg",
+  ],
+  // Cell 3 — bottom middle
+  [
+    "/assets/bags/bags_1.jpg",
+    "/assets/bags/bags_3.jpg",
+    "/assets/bags/bags_11.jpg",
+    "/assets/accessories/necklaces/necklaces_1.jpg",
+  ],
+  // Cell 4 — bottom right
+  [
+    "/assets/women/pants/pants_1.jpg",
+    "/assets/men/pants/pants_3.jpg",
+    "/assets/footwear/shoes_3.jpg",
+    "/assets/accessories/sunglasses/sunglasses_1.jpg",
+  ],
+];
+
+const cellDirections = [
+  "fromBottom", // cell 0 — tall left
+  "fromLeft", // cell 1 — top middle
+  "fromRight", // cell 2 — top right
+  "fromLeft", // cell 3 — bottom middle
+  "fromTop", // cell 4 — bottom right
 ];
 
 const featuredItems = [
@@ -112,12 +210,11 @@ const featuredItems = [
     src: "/assets/footwear/shoes_1.jpg",
     name: "Chunky Sole Sneakers",
     price: "₹3,999",
-    tag: "Shoes",
+    tag: "Footwear",
     to: "/products?category=footwear",
   },
 ];
 
-// New arrivals
 const newArrivals = [
   {
     src: "/assets/women/specials/specials_1.jpg",
@@ -142,309 +239,296 @@ const newArrivals = [
   },
 ];
 
+// ── HomePage — all useState/useEffect INSIDE here ──
 export default function HomePage() {
-  const [activeSlide, setActiveSlide] = useState(0);
-
   useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % slides.length);
-    }, 3500);
-
-    return () => clearInterval(timer);
+    const intervals = cellImages.map(
+      (_, i) =>
+        setInterval(
+          () => {
+            setCellIdx((prev) => {
+              const next = [...prev];
+              next[i] = (next[i] + 1) % cellImages[i].length;
+              return next;
+            });
+          },
+          6000 + i * 1200,
+        ), // ← much slower: 6s, 7.2s, 8.4s, 9.6s, 10.8s
+    );
+    return () => intervals.forEach(clearInterval);
   }, []);
+
+  // Also update initial state to 5 cells:
+  const [cellIdx, setCellIdx] = useState([0, 0, 0, 0, 0]);
+
   return (
-    <PageTransition>
-      <div className="bg-[#f9f9f7]">
-        {/* ── HERO ── */}
-        <section className="relative h-[92vh] min-h-[600px] overflow-hidden bg-[#031716]">
-          <img
-            src="/assets/hero_banner.jpg"
-            alt="Hero"
-            className="absolute inset-0 w-full h-full object-cover opacity-75"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = "/assets/hero.png";
+    <div className="bg-[#f0fafa]">
+      {/* ── HERO ── */}
+      <section className="relative h-[92vh] min-h-[600px] overflow-hidden bg-[#031716]">
+        <img
+          src="/assets/hero_banner.jpg"
+          alt="Hero"
+          className="absolute inset-0 w-full h-full object-cover opacity-75"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = "/assets/hero.png";
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#031716]/70 via-[#031716]/30 to-transparent" />
+        <div className="relative h-full flex flex-col justify-end pb-20 px-8 md:px-16 lg:px-24 max-w-7xl">
+          <p
+            className="text-white/60 text-xs tracking-[0.4em] uppercase mb-4"
+            style={{
+              animation: "fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.3s both",
             }}
-          />
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
-
-          {/* Content */}
-          <div className="relative h-full flex flex-col justify-end pb-20 px-8 md:px-16 lg:px-24 max-w-7xl">
-            <p className="text-white/70 text-sm tracking-[0.3em] uppercase mb-3">
-              New Collection — Summer 2024
-            </p>
-            <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white font-bold leading-none mb-6 max-w-2xl">
-              Wear Your Story
-            </h1>
-            <p className="text-white/70 text-lg mb-8 max-w-md">
-              Curated fashion for the modern individual. Discover pieces that
-              define you.
-            </p>
-            <div className="flex gap-4 flex-wrap">
-              <Link
-                to="/products"
-                className="bg-white text-gray-900 px-8 py-3.5 text-sm font-semibold tracking-wide hover:bg-gray-100 transition-colors"
-              >
-                Shop Now →
-              </Link>
-              <Link
-                to="/products?category=women"
-                className="border border-white text-white px-8 py-3.5 text-sm font-semibold tracking-wide hover:bg-white/10 transition-colors"
-              >
-                New Arrivals
-              </Link>
-            </div>
-          </div>
-
-          {/* Scroll indicator */}
-          <div className="absolute bottom-8 right-8 flex flex-col items-center gap-2 text-white/50">
-            <span className="text-xs tracking-widest rotate-90 mb-2">
-              SCROLL
-            </span>
-            <div className="w-0.5 h-12 bg-white/30 relative overflow-hidden">
-              <div className="absolute top-0 w-full bg-white/60 animate-bounce h-4" />
-            </div>
-          </div>
-        </section>
-
-        {/* ── MARQUEE STRIP ── */}
-        <div className="bg-gray-900 text-white py-3 overflow-hidden">
-          <div className="flex gap-12 animate-marquee whitespace-nowrap">
-            {Array(6)
-              .fill(null)
-              .map((_, i) => (
-                <span
-                  key={i}
-                  className="text-xs tracking-[0.3em] uppercase opacity-70"
-                >
-                  Free shipping over $100 &nbsp;·&nbsp; New arrivals weekly
-                  &nbsp;·&nbsp; Easy returns &nbsp;·&nbsp; Premium quality
-                </span>
-              ))}
+          >
+            New Collection — Summer 2024
+          </p>
+          <h1
+            className="font-serif text-5xl md:text-7xl lg:text-8xl text-white font-bold leading-none mb-6 max-w-2xl"
+            style={{
+              animation: "fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.5s both",
+            }}
+          >
+            Wear Your Story
+          </h1>
+          <p
+            className="text-white/70 text-lg mb-8 max-w-md"
+            style={{
+              animation: "fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.7s both",
+            }}
+          >
+            Curated fashion for the modern individual.
+          </p>
+          <div
+            className="flex gap-4 flex-wrap"
+            style={{
+              animation: "fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.9s both",
+            }}
+          >
+            <Link
+              to="/products"
+              className="bg-[#0C969C] text-white px-8 py-3.5 text-sm font-semibold tracking-wide hover:bg-[#0A7075] transition-colors rounded-sm"
+            >
+              Shop Now →
+            </Link>
+            <Link
+              to="/products?category=women"
+              className="border border-white/50 text-white px-8 py-3.5 text-sm font-semibold tracking-wide hover:bg-white/10 transition-colors rounded-sm"
+            >
+              New Arrivals
+            </Link>
           </div>
         </div>
+        <div className="absolute bottom-8 right-8 flex flex-col items-center gap-2 text-white/40">
+          <span
+            className="text-[10px] tracking-widest uppercase"
+            style={{ writingMode: "vertical-rl" }}
+          >
+            Scroll
+          </span>
+          <div className="w-px h-12 bg-white/20 relative overflow-hidden">
+            <div
+              className="absolute top-0 w-full bg-[#0C969C] h-4"
+              style={{ animation: "scrollLine 1.5s ease-in-out infinite" }}
+            />
+          </div>
+        </div>
+      </section>
 
-        {/* ── CATEGORIES ── */}
-        <AnimateOnScroll animation="bottom">
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-            <div className="flex items-end justify-between mb-10">
-              <div>
-                <p className="text-xs tracking-[0.3em] text-gray-400 uppercase mb-2">
-                  Browse By
-                </p>
-                <h2 className="font-serif text-3xl md:text-4xl text-gray-900">
-                  Categories
-                </h2>
-              </div>
-              <Link
-                to="/products"
-                className="text-sm text-gray-500 hover:text-gray-900 transition-colors underline underline-offset-4"
+      {/* ── MARQUEE ── */}
+      <div className="bg-[#031716] text-white py-3 overflow-hidden">
+        <div
+          className="flex gap-12 whitespace-nowrap"
+          style={{ animation: "marquee 30s linear infinite" }}
+        >
+          {Array(8)
+            .fill(null)
+            .map((_, i) => (
+              <span
+                key={i}
+                className="text-xs tracking-[0.3em] uppercase text-[#0C969C]/60"
               >
-                View all
-              </Link>
-            </div>
+                Free shipping over ₹999 &nbsp;·&nbsp; New arrivals weekly
+                &nbsp;·&nbsp; Easy returns &nbsp;·&nbsp; Premium quality
+              </span>
+            ))}
+        </div>
+      </div>
 
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-              {categories.map((cat) => (
-                <Link
-                  key={cat.label}
-                  to={cat.to}
-                  className={`${cat.bg} rounded-2xl p-6 flex flex-col items-center gap-3 hover:scale-105 transition-transform duration-200 group`}
-                >
-                  <span className="text-3xl">{cat.emoji}</span>
-                  <span className="text-sm font-semibold text-gray-800 tracking-wide">
-                    {cat.label}
-                  </span>
-                </Link>
-              ))}
+      {/* ── CATEGORIES ── */}
+      <AnimateOnScroll animation="bottom">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <p className="text-xs tracking-[0.3em] text-[#0A7075] uppercase mb-2">
+                Browse By
+              </p>
+              <h2 className="font-serif text-3xl md:text-4xl text-[#031716]">
+                Categories
+              </h2>
             </div>
-          </section>
+            <Link
+              to="/products"
+              className="text-sm text-[#0A7075] hover:text-[#031716] transition-colors underline underline-offset-4"
+            >
+              View all
+            </Link>
+          </div>
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
+            {categories.map((cat) => (
+              <Link
+                key={cat.label}
+                to={cat.to}
+                className={`${cat.bg} rounded-2xl p-4 sm:p-6 flex flex-col items-center gap-2 sm:gap-3 hover:scale-105 hover:bg-[#031716] hover:text-white transition-all duration-300 group`}
+              >
+                <span className="text-2xl sm:text-3xl">{cat.emoji}</span>
+                <span className="text-xs sm:text-sm font-semibold text-[#031716] group-hover:text-white tracking-wide transition-colors">
+                  {cat.label}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      </AnimateOnScroll>
+
+      {/* ── EDITORIAL COLLAGE ── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <AnimateOnScroll animation="bottom">
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <p className="text-xs tracking-[0.3em] text-[#0A7075] uppercase mb-2">
+                Editorial
+              </p>
+              <h2 className="font-serif text-3xl md:text-4xl text-[#031716]">
+                New Collection
+              </h2>
+            </div>
+            <Link
+              to="/products"
+              className="text-sm text-[#0A7075] hover:text-[#031716] transition-colors underline underline-offset-4"
+            >
+              Shop collection
+            </Link>
+          </div>
         </AnimateOnScroll>
 
-        {/* ── EDITORIAL COLLAGE ── */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        {/* Desktop grid */}
+        <div
+          className="hidden md:grid gap-3"
+          style={{
+            gridTemplateColumns: "1.2fr 1fr 1fr",
+            gridTemplateRows: "300px 300px",
+          }}
+        >
+          {cellImages.map((images, cellI) => (
+            <CollageCell
+              key={cellI}
+              images={images}
+              currentIdx={cellIdx[cellI]}
+              direction={cellDirections[cellI]}
+              rowSpan={cellI === 0} // ← only cell 0 spans 2 rows
+            />
+          ))}
+        </div>
+
+        {/* Mobile — horizontal scroll */}
+        <div className="md:hidden flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory">
+          {cellImages.map((images, cellI) => (
+            <div
+              key={cellI}
+              className="flex-shrink-0 w-48 h-64 rounded-2xl overflow-hidden snap-start bg-[#031716]"
+            >
+              <img
+                src={images[cellIdx[cellI]]}
+                alt=""
+                className="w-full h-full object-cover transition-all duration-500"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    "https://placehold.co/200x260/031716/0C969C?text=SS";
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── FEATURED PRODUCTS ── */}
+      <section className="bg-white py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimateOnScroll animation="bottom">
-            <div className="flex items-end justify-between mb-10">
+            <div className="flex items-end justify-between mb-12">
               <div>
                 <p className="text-xs tracking-[0.3em] text-[#0A7075] uppercase mb-2">
-                  Editorial
+                  Handpicked
                 </p>
                 <h2 className="font-serif text-3xl md:text-4xl text-[#031716]">
-                  New Collection
+                  Featured Pieces
                 </h2>
               </div>
               <Link
                 to="/products"
                 className="text-sm text-[#0A7075] hover:text-[#031716] transition-colors underline underline-offset-4"
               >
-                Shop collection
+                View all
               </Link>
             </div>
           </AnimateOnScroll>
 
-          {/* Slide indicators */}
-          <div className="flex gap-2 mb-6">
-            {slides.map((slide, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveSlide(i)}
-                className="flex items-center gap-2 group"
-              >
-                <div
-                  className={`h-0.5 transition-all duration-500 rounded-full ${
-                    activeSlide === i
-                      ? "w-8 bg-[#0A7075]"
-                      : "w-4 bg-gray-300 group-hover:bg-[#0C969C]"
-                  }`}
-                />
-                <span
-                  className={`text-xs font-medium transition-colors ${
-                    activeSlide === i ? "text-[#0A7075]" : "text-gray-400"
-                  }`}
-                >
-                  {slide.label}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Grid */}
-          <div
-            className="hidden md:block relative overflow-hidden rounded-2xl"
-            style={{ height: "600px" }}
-          >
-            {slides.map((slide, slideIdx) => (
-              <div
-                key={slideIdx}
-                className="absolute inset-0 grid grid-cols-3 grid-rows-2 gap-3"
-                style={{
-                  opacity: activeSlide === slideIdx ? 1 : 0,
-                  transform:
-                    activeSlide === slideIdx
-                      ? "scale(1) translateX(0)"
-                      : slideIdx < activeSlide
-                        ? "scale(0.97) translateX(-20px)"
-                        : "scale(0.97) translateX(20px)",
-                  transition: "all 0.75s cubic-bezier(0.16, 1, 0.3, 1)",
-                  pointerEvents: activeSlide === slideIdx ? "auto" : "none",
-                }}
-              >
-                {slide.images.map((src, i) => (
-                  <Link
-                    key={i}
-                    to="/products"
-                    className={`relative overflow-hidden rounded-xl group bg-gray-200 ${
-                      i === 0 ? "row-span-2" : i === 3 ? "row-span-2" : ""
-                    }`}
-                    style={{
-                      transition: `transform 0.75s cubic-bezier(0.16, 1, 0.3, 1) ${i * 60}ms`,
-                      transform:
-                        activeSlide === slideIdx
-                          ? "translateY(0)"
-                          : "translateY(30px)",
-                    }}
-                  >
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+            {featuredItems.map((item, i) => (
+              <AnimateOnScroll key={i} animation="bottom" delay={i * 100}>
+                <Link to={item.to} className="group block">
+                  <div className="relative overflow-hidden rounded-2xl bg-[#f0fafa] aspect-[3/4] mb-3">
                     <img
-                      src={src}
-                      alt=""
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      src={item.src}
+                      alt={item.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
-                          "https://placehold.co/400x500/031716/0C969C?text=SS";
+                          "https://placehold.co/300x400/f0fafa/0C969C?text=SS";
                       }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#031716]/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  </Link>
-                ))}
-              </div>
-            ))}
-          </div>
-
-          {/* Mobile — horizontal scroll slider */}
-          <div className="md:hidden mt-4 flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
-            {slides[activeSlide].images.map((src, i) => (
-              <div
-                key={i}
-                className="flex-shrink-0 w-48 h-64 rounded-xl overflow-hidden snap-start"
-                style={{
-                  opacity: 0,
-                  transform: "translateX(30px)",
-                  animation: `slideInRight 0.5s cubic-bezier(0.16,1,0.3,1) ${i * 80}ms forwards`,
-                }}
-              >
-                <img src={src} alt="" className="w-full h-full object-cover" />
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── FEATURED PRODUCTS ── */}
-        <section className="bg-white py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-end justify-between mb-12">
-              <div>
-                <p className="text-xs tracking-[0.3em] text-gray-400 uppercase mb-2">
-                  Handpicked
-                </p>
-                <h2 className="font-serif text-3xl md:text-4xl text-gray-900">
-                  Featured Pieces
-                </h2>
-              </div>
-              <Link
-                to="/products"
-                className="text-sm text-gray-500 hover:text-gray-900 transition-colors underline underline-offset-4"
-              >
-                View all products
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {featuredItems.map((item, i) => (
-                <AnimateOnScroll key={i} animation="bottom" delay={i * 100}>
-                  <Link key={i} to={item.to} className="group">
-                    <div className="relative overflow-hidden rounded-xl bg-gray-100 aspect-[3/4] mb-4">
-                      <img
-                        src={item.src}
-                        alt={item.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src =
-                            `https://placehold.co/300x400/e5e7eb/9ca3af?text=${item.name}`;
-                        }}
-                      />
-                      <div className="absolute top-3 left-3">
-                        <span className="bg-white/90 text-gray-700 text-xs px-2.5 py-1 rounded-full font-medium">
-                          {item.tag}
-                        </span>
-                      </div>
-                      {/* Quick shop overlay */}
-                      <div className="absolute inset-x-0 bottom-0 bg-gray-900/90 text-white text-center text-sm py-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                        Quick Shop
-                      </div>
+                    <div className="absolute top-3 left-3">
+                      <span className="bg-white/90 text-[#031716] text-xs px-2.5 py-1 rounded-full font-medium">
+                        {item.tag}
+                      </span>
                     </div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                      {item.name}
-                    </h3>
-                    <p className="text-sm text-gray-500">{item.price}</p>
-                  </Link>
-                </AnimateOnScroll>
-              ))}
-            </div>
+                    <div className="absolute inset-x-0 bottom-0 bg-[#031716]/90 text-white text-center text-xs font-bold py-3 tracking-widest uppercase translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                      Quick Shop
+                    </div>
+                  </div>
+                  <h3 className="text-sm font-semibold text-[#031716] mb-1">
+                    {item.name}
+                  </h3>
+                  <p className="text-sm text-[#0A7075] font-medium">
+                    {item.price}
+                  </p>
+                </Link>
+              </AnimateOnScroll>
+            ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ── BANNER CTA ── */}
+      {/* ── BANNER CTA ── */}
+      <AnimateOnScroll animation="scale">
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="relative overflow-hidden rounded-3xl bg-gray-900 px-10 py-20 text-center">
+          <div
+            className="relative overflow-hidden rounded-3xl px-8 sm:px-16 py-20 text-center"
+            style={{
+              background:
+                "linear-gradient(135deg, #031716 0%, #032F30 50%, #0A7075 100%)",
+            }}
+          >
             <div
               className="absolute inset-0 opacity-20"
               style={{
                 backgroundImage:
-                  "radial-gradient(circle at 20% 50%, #c9a96e 0%, transparent 50%), radial-gradient(circle at 80% 50%, #6366f1 0%, transparent 50%)",
+                  "radial-gradient(circle at 20% 50%, #0C969C, transparent 50%), radial-gradient(circle at 80% 50%, #6BA3BE, transparent 50%)",
               }}
             />
             <div className="relative">
-              <p className="text-white/60 text-xs tracking-[0.4em] uppercase mb-4">
+              <p className="text-[#0C969C] text-xs tracking-[0.4em] uppercase mb-4">
                 Limited Time
               </p>
               <h2 className="font-serif text-4xl md:text-6xl text-white font-bold mb-4">
@@ -455,83 +539,69 @@ export default function HomePage() {
               </p>
               <Link
                 to="/products"
-                className="inline-block bg-white text-gray-900 px-10 py-4 text-sm font-bold tracking-wide hover:bg-gray-100 transition-colors rounded-full"
+                className="inline-block bg-white text-[#031716] px-10 py-4 text-sm font-bold tracking-wide hover:bg-[#0C969C] hover:text-white transition-all duration-300 rounded-full"
               >
                 Shop the Sale
               </Link>
             </div>
           </div>
         </section>
+      </AnimateOnScroll>
 
-        {/* ── NEW ARRIVALS STRIP ── */}
-        <section className="bg-white pt-4 pb-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* ── NEW ARRIVALS ── */}
+      <section className="bg-white pt-4 pb-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <AnimateOnScroll animation="bottom">
             <div className="flex items-end justify-between mb-10">
               <div>
-                <p className="text-xs tracking-[0.3em] text-gray-400 uppercase mb-2">
+                <p className="text-xs tracking-[0.3em] text-[#0A7075] uppercase mb-2">
                   Just In
                 </p>
-                <h2 className="font-serif text-3xl md:text-4xl text-gray-900">
+                <h2 className="font-serif text-3xl md:text-4xl text-[#031716]">
                   New Arrivals
                 </h2>
               </div>
+              <Link
+                to="/products"
+                className="text-sm text-[#0A7075] hover:text-[#031716] transition-colors underline underline-offset-4"
+              >
+                View all
+              </Link>
             </div>
+          </AnimateOnScroll>
 
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {[
-                {
-                  src: "/src/assets/women/specials/specials_1.jpg",
-                  name: "Special Edition Top",
-                  price: "₹899",
-                },
-                {
-                  src: "/src/assets/men/pants/pants_1.jpg",
-                  name: "Cargo Trousers",
-                  price: "₹1199",
-                },
-                {
-                  src: "/src/assets/bags/bags_5.jpg",
-                  name: "Mini Crossbody",
-                  price: "₹999",
-                },
-                {
-                  src: "/src/assets/accessories/caps/caps_1.jpg",
-                  name: "Washed Cap",
-                  price: "₹399",
-                },
-                {
-                  src: "/src/assets/women/frock/frock_2.jpg",
-                  name: "Floral Midi Dress",
-                  price: "₹1299",
-                },
-              ].map((item, i) => (
-                <Link key={i} to="/products" className="group">
-                  <div className="relative overflow-hidden rounded-xl bg-gray-100 aspect-square mb-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+            {newArrivals.map((item, i) => (
+              <AnimateOnScroll key={i} animation="bottom" delay={i * 80}>
+                <Link to="/products" className="group block">
+                  <div className="relative overflow-hidden rounded-2xl bg-[#f0fafa] aspect-square mb-3">
                     <img
                       src={item.src}
                       alt={item.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
-                          `https://placehold.co/300x300/e5e7eb/9ca3af?text=New`;
+                          "https://placehold.co/300x300/f0fafa/0C969C?text=New";
                       }}
                     />
                     <div className="absolute top-2 right-2">
-                      <span className="bg-gray-900 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
+                      <span className="bg-[#031716] text-white text-[10px] px-2 py-0.5 rounded-full font-semibold">
                         NEW
                       </span>
                     </div>
                   </div>
-                  <p className="text-xs font-semibold text-gray-900 truncate">
+                  <p className="text-xs font-semibold text-[#031716] truncate">
                     {item.name}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">{item.price}</p>
+                  <p className="text-xs text-[#0A7075] font-medium mt-0.5">
+                    {item.price}
+                  </p>
                 </Link>
-              ))}
-            </div>
+              </AnimateOnScroll>
+            ))}
           </div>
-        </section>
-      </div>
-    </PageTransition>
+        </div>
+      </section>
+    </div>
   );
 }
