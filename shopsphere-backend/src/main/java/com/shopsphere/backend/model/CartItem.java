@@ -24,7 +24,9 @@ public class CartItem {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @Builder.Default
     private Integer quantity = 1;
+
     private String size;
     private String color;
 }

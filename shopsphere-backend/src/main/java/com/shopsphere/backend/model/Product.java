@@ -9,7 +9,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "products")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -58,10 +59,19 @@ public class Product {
     @Builder.Default
     private List<String> tags = new ArrayList<>();
 
+    @Builder.Default
     private Double rating = 0.0;
+
+    @Builder.Default
     private Integer reviewCount = 0;
+
+    @Builder.Default
     private Boolean inStock = true;
+
+    @Builder.Default
     private Boolean isFeatured = false;
+
+    @Builder.Default
     private Boolean isNew = false;
 
     @Column(updatable = false)

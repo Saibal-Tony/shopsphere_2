@@ -6,7 +6,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -27,6 +28,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Builder.Default
     private Role role = Role.USER;
 
     @Column(updatable = false)
@@ -37,5 +39,7 @@ public class User {
         createdAt = LocalDateTime.now();
     }
 
-    public enum Role { USER, ADMIN }
+    public enum Role {
+        USER, ADMIN
+    }
 }
