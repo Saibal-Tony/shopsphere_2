@@ -647,6 +647,29 @@ export default function HomePage() {
               </Link>
             ))}
           </div>
+          {/* Desktop Categories */}
+          <div className="hidden lg:grid grid-cols-4 sm:grid-cols-7 gap-3">
+            {categories.map((cat, i) => (
+              <AnimateOnScroll
+                key={cat.label}
+                animation="bottom"
+                delay={i * 60}
+              >
+                <Link
+                  to={cat.to}
+                  className={`${cat.bg} rounded-2xl p-4 sm:p-5 flex flex-col items-center gap-3 group hover:bg-[#031716] transition-all duration-400 cursor-pointer`}
+                >
+                  <div className="transition-transform duration-300 group-hover:scale-110">
+                    <CategoryIcon type={cat.type} />
+                  </div>
+
+                  <span className="text-xs sm:text-sm font-semibold text-[#031716] group-hover:text-white tracking-wide transition-colors duration-300">
+                    {cat.label}
+                  </span>
+                </Link>
+              </AnimateOnScroll>
+            ))}
+          </div>
         </section>
       </AnimateOnScroll>
 
